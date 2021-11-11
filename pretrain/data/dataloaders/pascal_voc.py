@@ -42,16 +42,40 @@ class VOCSegmentation(data.Dataset):
     
         self.images = []
         self.sal = []
+        self.labels = []
+        self.sims = []
+        self.sim_ids = []
 
         with open(os.path.join(self.root, 'sets/trainaug.txt'), 'r') as f:
             all_ = f.read().splitlines()
 
+        with open(os.path.join(self.root, 'sets/pascal_img_info'), 'r') as f:
+            img_info_lines = f.read().splitlines()
+        self.img2label = dict()
+        self.img2sim = dict()
+        for line in img_info_lines:
+            t_split = line.split(' ')
+            self.img2label[t_split[0]] = tuple([int(t) for t in t_split[1].replace(',)',')')[1:-1].replace(' ','').split(',')])
+            self.img2sim[t_split[0]]   = tuple([t for t in t_split[1][1:-1].replace(' ','').replace('\'','').split(',')])
+        print(list(self.img2label.items())[:10])
+        print(list(self.img2sim.items())[:10])
+
+        self.img2idx = dict()
         for f in all_:
             _image = os.path.join(self.images_dir, f + ".jpg")
             _sal = os.path.join(self.sal_dir, f + ".png")
             if os.path.isfile(_image) and os.path.isfile(_sal):
+                self.img2idx[f] = len(self.images)
                 self.images.append(_image)
                 self.sal.append(_sal)
+                self.labels.append(self.img2label[f])
+                self.sims.append(self.img2sim[f])
+        for fs in self.sims:
+            self.sim_ids.append(tuple([img2idx[t] for t in fs]))
+        print(list(self.img2idx.items())[:10])
+        print(self.labels[:10])
+        print(self.sims[:10])
+        print(self.sim_ids[:10])
 
         assert (len(self.images) == len(self.sal))
 
