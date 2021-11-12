@@ -9,7 +9,6 @@ import warnings
 from copy import deepcopy
 from torch.nn.functional import interpolate
 
-
 class Dataset(data.Dataset):
     def __init__(self, base_dataset, train_transform, downsample_sal=False,
                     scale_factor_sal=0.125, min_area=0.01, max_area=0.99):
@@ -78,6 +77,7 @@ class DatasetKeyQuery(data.Dataset):
 
     def __getitem__(self, index):
         sample_ = self.base_dataset.__getitem__(index)
+        key_sample_ = self.base_dataset.__getitem__(random.choice(self.base_dataset.sim_ids[index])) if len(self.base_dataset.sim_ids[index]) > 0 else sample_
         count = 0
         
         while True:
@@ -87,11 +87,13 @@ class DatasetKeyQuery(data.Dataset):
 
             if count > 2: # Failed to load image two times in a row. Try a different one.
                 #warnings.warn('Try loading a different image. Failed to load {}'.format(sample['meta']['image']))
-                sample_ = self.base_dataset.__getitem__(random.randint(0, self.__len__()-1))
+                rdm_idx = random.randint(0, self.__len__()-1)
+                sample_ = self.base_dataset.__getitem__(rdm_idx)
+                key_sample_ = self.base_dataset.__getitem__(random.choice(self.base_dataset.sim_ids[rdm_idx])) if len(self.base_dataset.sim_ids[rdm_idx]) > 0 else sample_
                 count = 100
  
             key_sample = self.transform(deepcopy(sample_))
-            query_sample = self.transform(deepcopy(sample_))
+            query_sample = self.transform(deepcopy(key_sample_))
                            
             if self.downsample_sal: # Downsample
                 key_sample['sal'] = interpolate(key_sample['sal'][None,None,:,:].float(),

@@ -28,6 +28,9 @@ class VOCSegmentation(data.Dataset):
                  transform=None, overfit=False):
         super(VOCSegmentation, self).__init__()
 
+        print(Path.db_root_dir('VOCSegmentation'))
+        print(root)
+        print(os.path.join(root, 'sets/trainaug.txt'))
         self.root = root
         self.transform = transform
 
@@ -49,14 +52,14 @@ class VOCSegmentation(data.Dataset):
         with open(os.path.join(self.root, 'sets/trainaug.txt'), 'r') as f:
             all_ = f.read().splitlines()
 
-        with open(os.path.join(self.root, 'sets/pascal_img_info'), 'r') as f:
+        with open(os.path.join(Path.db_root_dir(), 'pascal_img_info'), 'r') as f:
             img_info_lines = f.read().splitlines()
         self.img2label = dict()
         self.img2sim = dict()
         for line in img_info_lines:
-            t_split = line.split(' ')
+            t_split = line.split('\t')
             self.img2label[t_split[0]] = tuple([int(t) for t in t_split[1].replace(',)',')')[1:-1].replace(' ','').split(',')])
-            self.img2sim[t_split[0]]   = tuple([t for t in t_split[1][1:-1].replace(' ','').replace('\'','').split(',')])
+            self.img2sim[t_split[0]]   = tuple([t for t in t_split[2][1:-1].replace(' ','').replace('\'','').split(',')])
         print(list(self.img2label.items())[:10])
         print(list(self.img2sim.items())[:10])
 
@@ -65,13 +68,16 @@ class VOCSegmentation(data.Dataset):
             _image = os.path.join(self.images_dir, f + ".jpg")
             _sal = os.path.join(self.sal_dir, f + ".png")
             if os.path.isfile(_image) and os.path.isfile(_sal):
+                if f not in list(self.img2label.keys()) or f not in list(self.img2sim.keys()):
+                    continue
                 self.img2idx[f] = len(self.images)
                 self.images.append(_image)
                 self.sal.append(_sal)
                 self.labels.append(self.img2label[f])
                 self.sims.append(self.img2sim[f])
+        img2idx_keys = list(self.img2idx.keys())
         for fs in self.sims:
-            self.sim_ids.append(tuple([img2idx[t] for t in fs]))
+            self.sim_ids.append(tuple([self.img2idx[t] for t in fs if t in img2idx_keys]))
         print(list(self.img2idx.items())[:10])
         print(self.labels[:10])
         print(self.sims[:10])
@@ -98,7 +104,7 @@ class VOCSegmentation(data.Dataset):
         
         sample['meta'] = {'image': str(self.images[index])}
 
-        return sample
+        return sample 
 
     def __len__(self):
             return len(self.images)
@@ -119,6 +125,9 @@ class VOCSegmentation(data.Dataset):
         return ['background', 'salient object']
     
     def _download(self):
+        print(Path.db_root_dir())
+        print(self.FILE)
+        print(os.path.join(Path.db_root_dir(), self.FILE))
         _fpath = os.path.join(Path.db_root_dir(), self.FILE)
 
         if os.path.isfile(_fpath):
@@ -131,7 +140,7 @@ class VOCSegmentation(data.Dataset):
 
         # extract file
         cwd = os.getcwd()
-        print('\nExtracting tar file')
+        print('\nExtracting tar file to {}'.format(Path.db_root_dir()))
         tar = tarfile.open(_fpath)
         os.chdir(Path.db_root_dir())
         tar.extractall()
