@@ -36,6 +36,7 @@ class ContrastiveModel(nn.Module):
         # create the queue
         self.dim = p['model_kwargs']['ndim']
         self.register_buffer("queue", torch.randn(self.dim, self.K))
+        self.register_buffer("queue_lbl", torch.zeros(self.K))
         self.queue = nn.functional.normalize(self.queue, dim=0)
 
         self.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long))
@@ -52,7 +53,7 @@ class ContrastiveModel(nn.Module):
             param_k.data = param_k.data * self.m + param_q.data * (1. - self.m)
 
     @torch.no_grad()
-    def _dequeue_and_enqueue(self, keys):
+    def _dequeue_and_enqueue(self, keys, key_labels):
         # gather keys before updating queue
         keys = concat_all_gather(keys)
 
@@ -63,6 +64,7 @@ class ContrastiveModel(nn.Module):
 
         # replace the keys at ptr (dequeue and enqueue)
         self.queue[:, ptr:ptr + batch_size] = keys.T
+        self.queue_lbl[ptr:ptr + batch_size] = key_labels
         ptr = (ptr + batch_size) % self.K  # move pointer
 
         self.queue_ptr[0] = ptr
@@ -114,7 +116,7 @@ class ContrastiveModel(nn.Module):
 
         return x_gather[idx_this]
 
-    def forward(self, im_q, im_k, sal_q, sal_k):
+    def forward(self, im_q, im_k, sal_q, sal_k, im_q_labels):
         """
         Input:
             images: a batch of images (B x 3 x H x W) 
@@ -171,7 +173,7 @@ class ContrastiveModel(nn.Module):
         logits /= self.T
 
         # dequeue and enqueue
-        self._dequeue_and_enqueue(prototypes) 
+        self._dequeue_and_enqueue(prototypes, im_q_labels) 
 
         return logits, sal_q, sal_loss
 
