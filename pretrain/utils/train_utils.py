@@ -25,7 +25,7 @@ def train(p, train_loader, model, optimizer, epoch, amp):
         # Forward pass
         im_q = batch['query']['image'].cuda(p['gpu'], non_blocking=True)
         im_q_labels = batch['query']['label'][0].cuda(p['gpu'], non_blocking=True)
-        print(im_q_labels)
+#         print(im_q_labels)
         im_k = batch['key']['image'].cuda(p['gpu'], non_blocking=True)
         sal_q = batch['query']['sal'].cuda(p['gpu'], non_blocking=True)
         sal_k = batch['key']['sal'].cuda(p['gpu'], non_blocking=True)
