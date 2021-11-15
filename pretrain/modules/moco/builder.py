@@ -168,8 +168,9 @@ class ContrastiveModel(nn.Module):
         negatives = self.queue.clone().detach()     # shape: dim x negatives
         
         with torch.no_grad():
-            print(negatives)
-            print(self.queue_lbl)
+            print('Negatives:', negatives)
+            print('Label Queue', self.queue_lbl)
+            print('Current Label', im_q_label)
         
         l_mem = torch.matmul(q, negatives)          # shape: pixels x negatives (Memory bank)
         logits = torch.cat([l_batch, l_mem], dim=1) # pixels x (proto + negatives)
