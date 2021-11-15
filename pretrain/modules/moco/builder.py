@@ -116,7 +116,7 @@ class ContrastiveModel(nn.Module):
 
         return x_gather[idx_this]
 
-    def forward(self, im_q, im_k, sal_q, sal_k, im_q_labels):
+    def forward(self, im_q, im_k, sal_q, sal_k, im_q_label):
         """
         Input:
             images: a batch of images (B x 3 x H x W) 
@@ -166,6 +166,11 @@ class ContrastiveModel(nn.Module):
         q = torch.index_select(q, index=mask_indexes, dim=0)
         l_batch = torch.matmul(q, prototypes.t())   # shape: pixels x proto
         negatives = self.queue.clone().detach()     # shape: dim x negatives
+        
+        with torch.no_grad():
+            print(negatives)
+            print(self.queue_lbl)
+        
         l_mem = torch.matmul(q, negatives)          # shape: pixels x negatives (Memory bank)
         logits = torch.cat([l_batch, l_mem], dim=1) # pixels x (proto + negatives)
 
@@ -173,7 +178,7 @@ class ContrastiveModel(nn.Module):
         logits /= self.T
 
         # dequeue and enqueue
-        self._dequeue_and_enqueue(prototypes, im_q_labels) 
+        self._dequeue_and_enqueue(prototypes, im_q_label) 
 
         return logits, sal_q, sal_loss
 
