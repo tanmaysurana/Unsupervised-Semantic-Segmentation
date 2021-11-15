@@ -103,7 +103,7 @@ class VOCSegmentation(data.Dataset):
             sample = self.transform(sample)
         
         sample['meta'] = {'image': str(self.images[index])}
-        sample['label'] = int(self.labels[index])
+        sample['label'] = self.labels[index]
 
         return sample 
 
