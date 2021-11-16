@@ -166,12 +166,16 @@ class ContrastiveModel(nn.Module):
         q = torch.index_select(q, index=mask_indexes, dim=0)
         l_batch = torch.matmul(q, prototypes.t())   # shape: pixels x proto
         negatives = self.queue.clone().detach()     # shape: dim x negatives
-        
+#         filtered_negs = negatives.clone().detach()
         with torch.no_grad():
-            print(im_q)
-            print('Negatives:', negatives)
-            print('Label Queue', self.queue_lbl)
-            print('Current Label', im_q_label)
+#             print(im_q)
+#             print('Negatives:', negatives)
+#             print('Label Queue', self.queue_lbl)
+#             print('Current Label', im_q_label)
+            for ind, label in enumerate(self.queue_lbl):
+                if label in im_q_label:
+                    negatives = torch.cat([negatives[0:ind], negatives[ind+1:]])
+            print('Negatives Shape:', negatives.shape)
         
         l_mem = torch.matmul(q, negatives)          # shape: pixels x negatives (Memory bank)
         logits = torch.cat([l_batch, l_mem], dim=1) # pixels x (proto + negatives)
