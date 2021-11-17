@@ -167,6 +167,7 @@ class ContrastiveModel(nn.Module):
         l_batch = torch.matmul(q, prototypes.t())   # shape: pixels x proto
         negatives = self.queue.clone().detach()     # shape: dim x negatives
         negative_labels = self.queue_lbl.clone().detach()
+        pointer = int(self.queue_ptr.clone().detach())
         with torch.no_grad():
 #             print(im_q)
 #             print('Negatives:', negatives)
@@ -177,12 +178,14 @@ class ContrastiveModel(nn.Module):
                     label_index = (negative_labels == label).nonzero(as_tuple=True)[0][0]
                     negative_labels = torch.cat([negative_labels[0:label_index], negative_labels[label_index+1:]])
                     negatives = torch.cat([negatives[:, 0:label_index], negatives[:, label_index+1:]], dim=1)
+                    if label_index <= pointer:
+                        pointer -= 1
             if negatives.size()[1] > int(self.K / 2):
-                print('Queue_PTR:', int(self.queue_ptr) + 1)
-                if int(self.queue_ptr) + 1 >= int(self.K / 2):
-                    negatives = negatives[:, int(self.queue_ptr) + 1 - int(self.K / 2) : int(self.queue_ptr) + 1]
+                print('Queue_PTR:', pointer + 1, '|', 'Current Size:', negatives.size()[1])
+                if pointer + 1 >= int(self.K / 2):
+                    negatives = negatives[:, pointer + 1 - int(self.K / 2) : pointer + 1]
                 else:
-                    negatives = torch.cat([negatives[:, 0 : int(self.queue_ptr) + 1], negatives[:, negatives.size()[1] - (int(self.K / 2) - int(self.queue_ptr) - 1):]], dim=1)
+                    negatives = torch.cat([negatives[:, 0 : pointer + 1], negatives[:, negatives.size()[1] - (int(self.K / 2) - pointer - 1):]], dim=1)
             print('Negatives Shape:', negatives.size())
         
         l_mem = torch.matmul(q, negatives)          # shape: pixels x negatives (Memory bank)
