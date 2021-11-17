@@ -178,7 +178,7 @@ class ContrastiveModel(nn.Module):
                     negative_labels = torch.cat([negative_labels[0:label_index], negative_labels[label_index+1:]])
                     negatives = torch.cat([negatives[:, 0:label_index], negatives[:, label_index+1:]], dim=1)
             if negatives.size()[1] > int(self.K / 2):
-                negatives = negatives[:, 0:int(self.K / 2)]
+                negatives = negatives[:, int(self.K / 2):]
             print('Negatives Shape:', negatives.size())
         
         l_mem = torch.matmul(q, negatives)          # shape: pixels x negatives (Memory bank)
