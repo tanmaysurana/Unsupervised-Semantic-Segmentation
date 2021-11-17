@@ -36,7 +36,7 @@ class ContrastiveModel(nn.Module):
         # create the queue
         self.dim = p['model_kwargs']['ndim']
         self.register_buffer("queue", torch.randn(self.dim, self.K))
-        self.register_buffer("queue_lbl", torch.zeros(self.K))
+        self.register_buffer("queue_lbl", torch.randn(self.K))
         self.queue = nn.functional.normalize(self.queue, dim=0)
 
         self.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long))
