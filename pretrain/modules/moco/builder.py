@@ -178,6 +178,7 @@ class ContrastiveModel(nn.Module):
                     negative_labels = torch.cat([negative_labels[0:label_index], negative_labels[label_index+1:]])
                     negatives = torch.cat([negatives[:, 0:label_index], negatives[:, label_index+1:]], dim=1)
             if negatives.size()[1] > int(self.K / 2):
+                print('Queue_PTR:', int(self.queue_ptr) + 1)
                 if int(self.queue_ptr) + 1 >= int(self.K / 2):
                     negatives = negatives[:, int(self.queue_ptr) + 1 - int(self.K / 2) : int(self.queue_ptr) + 1]
                 else:
