@@ -174,7 +174,7 @@ class ContrastiveModel(nn.Module):
 #             print('Current Label', im_q_label)
             for label in self.queue_lbl:
                 if label in im_q_label:
-                    label_index = negative_labels.index(label)
+                    label_index = (negative_labels == label).nonzero(as_tuple=True)[0][0]
                     negative_labels = torch.cat([negative_labels[0:label_index], negative_labels[label_index+1:]])
                     negatives = torch.cat([negatives[:, 0:label_index], negatives[:, label_index+1:]], dim=1)
             print('Negatives Shape:', negatives.size())
