@@ -37,4 +37,4 @@ scheduler: poly
 moco_kwargs:
    T: 0.5 # Temperature
    m: 0.999 # Momentum
-   K: 128 # Negatives
+   K: 256 # Negatives
