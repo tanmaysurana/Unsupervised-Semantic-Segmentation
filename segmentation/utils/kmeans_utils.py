@@ -173,7 +173,8 @@ def _hungarian_match(flat_preds, flat_targets, preds_k, targets_k, metric='acc')
 
     # perform hungarian matching
     print('Using iou as metric')
-    results = Parallel(n_jobs=N_JOBS, backend='multiprocessing')(delayed(get_iou)(flat_preds, flat_targets, c1, c2) for c2 in range(num_k) for c1 in range(num_k))
+#     results = Parallel(n_jobs=N_JOBS, backend='multiprocessing')(delayed(get_iou)(flat_preds, flat_targets, c1, c2) for c2 in range(num_k) for c1 in range(num_k))
+    results = Parallel(n_jobs=-1, backend='multiprocessing', verbose=10)(delayed(get_iou)(flat_preds, flat_targets, c1, c2) for c2 in range(num_k) for c1 in range(num_k))
     results = np.array(results)
     results = results.reshape((num_k, num_k)).T
     match = linear_sum_assignment(flat_targets.shape[0] - results)
